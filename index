@@ -1,0 +1,2334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Professional Proof Generator | FARDIN AD WORKS</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+
+    <style>
+        :root {
+            --bg-main: #050507;
+            --bg-card: #121216;
+            --bg-input: #1c1c21;
+            --border: #2a2a35;
+            --text-primary: #f4f4f5;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #22c55e;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 960px;
+            width: 100%;
+        }
+
+        .header {
+            margin-bottom: 24px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .panel-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .upload-box {
+            border: 2px dashed var(--border);
+            border-radius: 10px;
+            height: 160px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            background: rgba(28, 28, 33, 0.4);
+            overflow: hidden;
+        }
+
+        .upload-box:hover {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .upload-box input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .upload-content {
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .upload-content svg {
+            width: 28px;
+            height: 28px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .upload-content span {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .upload-box img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+            display: none;
+            z-index: 1;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 3;
+            transition: 0.2s;
+        }
+
+        .remove-btn:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .scan-status {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            display: none;
+            z-index: 3;
+            white-space: nowrap;
+            border: 1px solid var(--border);
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group.full {
+            grid-column: span 2;
+        }
+
+        .input-group label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .input-group input,
+        .input-group select {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 11px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-input);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            justify-content: flex-end;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .export-wrapper {
+            background: #000000;
+            border-radius: 12px;
+            padding: 40px;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+        }
+
+        .watermark-overlay {
+            position: absolute;
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.12);
+            pointer-events: none;
+            z-index: 10;
+            user-select: none;
+            transition: all 0.3s ease;
+        }
+
+        .wm-bottom-right {
+            bottom: 25px;
+            right: 30px;
+        }
+
+        .wm-center {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            font-size: 28px;
+            opacity: 0.08;
+        }
+
+        .wm-top-right {
+            top: 25px;
+            right: 30px;
+        }
+
+        .export-grid {
+            display: grid;
+            grid-template-columns: 1fr 50px 1fr;
+            gap: 24px;
+            align-items: stretch;
+        }
+
+        .export-col {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .export-label {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #71717a;
+        }
+
+        .export-img-box {
+            background: #09090b;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 8px;
+            height: 380px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 4px 12px rgba(0,0,0,0.6);
+        }
+
+        .export-img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            background: #000;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+
+        .export-img-placeholder {
+            color: #3f3f46;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: absolute;
+            font-weight: 600;
+        }
+
+        .export-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .stat-box {
+            background: #121216;
+            padding: 16px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .eng-rate {
+            background: #121216;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #d4d4d8;
+        }
+
+        .divider-col {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .divider-line {
+            width: 1px;
+            height: 100%;
+            background: var(--border);
+            position: relative;
+        }
+
+        .divider-arrow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #000000;
+            padding: 10px 0;
+            color: #71717a;
+        }
+
+        .export-highlights {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .highlight-tag {
+            background: rgba(59, 130, 246, 0.1);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .export-footer {
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .branding {
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .growth-badge {
+            background: rgba(34, 197, 94, 0.12);
+            color: #4ade80;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            border: 1px solid rgba(34, 197, 94, 0.25);
+            letter-spacing: 0.5px;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            width: 100%;
+            max-width: 850px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .crop-container {
+            height: 550px;
+            background: var(--bg-main);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .crop-container img {
+            max-width: 100%;
+            display: block;
+        }
+
+        .crop-toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .crop-tools-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        .tool-btn {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 7px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .tool-btn:hover,
+        .tool-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border);
+            padding-top: 14px;
+        }
+
+        svg {
+            width: 18px;
+            height: 18px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>Campaign Performance Proof</h1>
+        <p>Advanced Case Study & Analytics Generator with AI Smart Crop.</p>
+    </div>
+
+    <!-- MEDIA -->
+    <div class="panel">
+        <div class="panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            Media Uploads (AI Smart Crop & Manual Options)
+        </div>
+
+        <div class="upload-grid">
+
+            <div class="upload-box" id="beforeBox">
+
+                <button class="remove-btn" id="beforeRemove" aria-label="Remove">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+
+                <div class="upload-content">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    <span>Upload Before Image</span>
+                </div>
+
+                <img id="beforeImg" />
+                <input type="file" id="beforeInput" accept="image/*" />
+                <div class="scan-status" id="beforeScanStatus">Scanning metrics...</div>
+            </div>
+
+            <div class="upload-box" id="afterBox">
+
+                <button class="remove-btn" id="afterRemove" aria-label="Remove">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+
+                <div class="upload-content">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    <span>Upload After Image</span>
+                </div>
+
+                <img id="afterImg" />
+                <input type="file" id="afterInput" accept="image/*" />
+                <div class="scan-status" id="afterScanStatus">Scanning metrics...</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="panel">
+
+        <div class="panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            Campaign Metrics & Branding Settings
+        </div>
+
+        <div class="input-grid">
+
+            <div class="input-group">
+                <label>Before Views</label>
+                <input type="text" id="bViewsInput" value="593" />
+            </div>
+
+            <div class="input-group">
+                <label>After Views</label>
+                <input type="text" id="aViewsInput" value="3633" />
+            </div>
+
+            <div class="input-group">
+                <label>Before Likes</label>
+                <input type="text" id="bLikesInput" value="300" />
+            </div>
+
+            <div class="input-group">
+                <label>After Likes</label>
+                <input type="text" id="aLikesInput" value="346" />
+            </div>
+
+            <div class="input-group">
+                <label>Campaign Label</label>
+                <input type="text" id="labelInput" value="7-Day Targeted Video Promotion" />
+            </div>
+
+            <div class="input-group">
+                <label>Agency / Brand Name</label>
+                <input type="text" id="brandInput" value="FARDIN AD WORKS" />
+            </div>
+
+            <div class="input-group">
+                <label>Watermark Position</label>
+                <select id="wmPosSelect">
+                    <option value="wm-bottom-right">Bottom Right (Default)</option>
+                    <option value="wm-top-right">Top Right</option>
+                    <option value="wm-center">Center Watermark</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Export Format / Size</label>
+                <select id="exportSizeSelect">
+                    <option value="standard">Standard HD (16:9 Landscape)</option>
+                    <option value="square">Fiverr Gig Image (1:1 Square)</option>
+                </select>
+            </div>
+
+            <!-- NEW: EXPORT QUALITY -->
+            <div class="input-group">
+                <label>Export Quality</label>
+                <select id="exportQualitySelect">
+                    <option value="2">HD Quality</option>
+                    <option value="3">2K Quality</option>
+                    <option value="4" selected>4K Quality</option>
+                </select>
+            </div>
+
+            <div class="input-group full">
+                <label>Campaign Highlights (Comma separated tags)</label>
+                <input type="text" id="highlightsInput"
+                       value="100% Real & Organic, Targeted Niche Traffic, High Engagement Retention" />
+            </div>
+
+        </div>
+    </div>
+
+    <!-- PREVIEW -->
+    <div class="panel">
+
+        <div class="panel-title">Live Preview</div>
+
+        <div class="export-wrapper" id="exportNode">
+
+            <div class="watermark-overlay wm-bottom-right" id="watermarkText">
+                FARDIN AD WORKS
+            </div>
+
+            <div class="export-grid">
+
+                <!-- BEFORE -->
+                <div class="export-col">
+
+                    <div class="export-label">Before</div>
+
+                    <div class="export-img-box">
+                        <span class="export-img-placeholder" id="bPlaceholder">
+                            No Image Uploaded
+                        </span>
+                        <img id="exportBeforeImg" crossorigin="anonymous" />
+                    </div>
+
+                    <div class="export-stats">
+
+                        <div class="stat-box">
+                            <div class="stat-value" id="valBViews" style="color: #ef4444;">
+                                593
+                            </div>
+                            <div class="stat-label">Views</div>
+                        </div>
+
+                        <div class="stat-box">
+                            <div class="stat-value" id="valBLikes">
+                                300
+                            </div>
+                            <div class="stat-label">Likes</div>
+                        </div>
+
+                    </div>
+
+                    <div class="eng-rate" id="valBEng">
+                        Engagement Rate: 50.6%
+                    </div>
+
+                </div>
+
+                <!-- DIVIDER -->
+                <div class="divider-col">
+                    <div class="divider-line">
+                        <div class="divider-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AFTER -->
+                <div class="export-col">
+
+                    <div class="export-label" style="color: #f4f4f5;">
+                        After
+                    </div>
+
+                    <div class="export-img-box" style="border-color: #3f3f46;">
+
+                        <span class="export-img-placeholder" id="aPlaceholder">
+                            No Image Uploaded
+                        </span>
+
+                        <img id="exportAfterImg" crossorigin="anonymous" />
+
+                    </div>
+
+                    <div class="export-stats">
+
+                        <div class="stat-box">
+                            <div class="stat-value" id="valAViews" style="color: #22c55e;">
+                                3.6K
+                            </div>
+                            <div class="stat-label">Views</div>
+                        </div>
+
+                        <div class="stat-box">
+                            <div class="stat-value" id="valALikes">
+                                346
+                            </div>
+                            <div class="stat-label">Likes</div>
+                        </div>
+
+                    </div>
+
+                    <div class="eng-rate" id="valAEng">
+                        Engagement Rate: 9.5%
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="export-highlights" id="valHighlights">
+                <span class="highlight-tag">100% Real & Organic</span>
+                <span class="highlight-tag">Targeted Niche Traffic</span>
+                <span class="highlight-tag">High Engagement Retention</span>
+            </div>
+
+            <div class="export-footer">
+
+                <div class="branding" id="valBrand">
+                    FARDIN AD WORKS | 7-DAY TARGETED VIDEO PROMOTION
+                </div>
+
+                <div class="growth-badge" id="valGrowth">
+                    +512.6% Views Growth
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="actions">
+
+            <button class="btn btn-outline" id="autoCountBtn">
+                🤖 Auto Views Count: OFF
+            </button>
+
+            <button class="btn btn-outline" id="swapBtn">
+                🔄 Swap
+            </button>
+
+            <button class="btn btn-outline" id="copyMetricsBtn">
+                📋 Copy Metrics
+            </button>
+
+            <button class="btn btn-outline" id="clearImagesBtn">
+                🗑️ Clear Images
+            </button>
+
+            <button class="btn btn-outline" id="resetBtn">
+                Reset Defaults
+            </button>
+
+            <button class="btn btn-primary" id="downloadBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Export Case Study (4K)
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- CROP MODAL -->
+<div class="modal" id="cropModal">
+
+    <div class="modal-content">
+
+        <div class="panel-title" style="color: #fff; margin-bottom: 0;">
+            AI Smart Crop & Manual Focus Control
+        </div>
+
+        <div class="crop-toolbar">
+
+            <div class="crop-tools-group">
+
+                <button class="tool-btn active" data-ratio="NaN">
+                    Free Size
+                </button>
+
+                <button class="tool-btn" data-ratio="16:9">
+                    16:9 Landscape
+                </button>
+
+                <button class="tool-btn" data-ratio="1">
+                    1:1 Square
+                </button>
+
+            </div>
+
+            <div class="crop-tools-group">
+
+                <button class="tool-btn" id="rotateLeftBtn">
+                    ↺ Rotate
+                </button>
+
+                <button class="tool-btn" id="resetCropBtn">
+                    Reset
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="crop-container">
+            <img id="cropTarget" />
+        </div>
+
+        <div class="modal-footer">
+
+            <button class="btn btn-outline"
+                    id="autoCropBtn"
+                    style="background: rgba(59, 130, 246, 0.15); border-color: var(--accent);">
+                ⚡ AI Smart Auto-Crop
+            </button>
+
+            <div style="display: flex; gap: 10px;">
+
+                <button class="btn btn-outline" id="cancelCrop">
+                    Cancel
+                </button>
+
+                <button class="btn btn-primary" id="applyCrop">
+                    Save & Apply
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- LIBRARIES -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    /* =========================================================
+       INPUT ELEMENTS
+       ========================================================= */
+
+    const bViews = document.getElementById('bViewsInput');
+    const aViews = document.getElementById('aViewsInput');
+
+    const bLikes = document.getElementById('bLikesInput');
+    const aLikes = document.getElementById('aLikesInput');
+
+    const label = document.getElementById('labelInput');
+    const brand = document.getElementById('brandInput');
+
+    const highlightsInput = document.getElementById('highlightsInput');
+
+    const wmPosSelect = document.getElementById('wmPosSelect');
+    const exportSizeSelect = document.getElementById('exportSizeSelect');
+    const exportQualitySelect = document.getElementById('exportQualitySelect');
+
+    /* =========================================================
+       PREVIEW ELEMENTS
+       ========================================================= */
+
+    const valBViews = document.getElementById('valBViews');
+    const valAViews = document.getElementById('valAViews');
+
+    const valBLikes = document.getElementById('valBLikes');
+    const valALikes = document.getElementById('valALikes');
+
+    const valBEng = document.getElementById('valBEng');
+    const valAEng = document.getElementById('valAEng');
+
+    const valBrand = document.getElementById('valBrand');
+    const valGrowth = document.getElementById('valGrowth');
+
+    const watermarkText = document.getElementById('watermarkText');
+    const valHighlights = document.getElementById('valHighlights');
+
+    const exportNode = document.getElementById('exportNode');
+
+    /* =========================================================
+       BUTTONS
+       ========================================================= */
+
+    const autoCountBtn = document.getElementById('autoCountBtn');
+    const swapBtn = document.getElementById('swapBtn');
+    const copyMetricsBtn = document.getElementById('copyMetricsBtn');
+    const clearImagesBtn = document.getElementById('clearImagesBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    /* =========================================================
+       DEFAULTS
+       ========================================================= */
+
+    const DEFAULTS = {
+        bViews: '593',
+        aViews: '3633',
+        bLikes: '300',
+        aLikes: '346',
+        label: '7-Day Targeted Video Promotion',
+        brand: 'FARDIN AD WORKS',
+        highlights: '100% Real & Organic, Targeted Niche Traffic, High Engagement Retention',
+        wmPos: 'wm-bottom-right',
+        exportSize: 'standard',
+        exportQuality: '4'
+    };
+
+    /* =========================================================
+       AUTO COUNT
+       ========================================================= */
+
+    let autoCountEnabled = false;
+
+    /* =========================================================
+       MANUAL OVERRIDE PROTECTION
+       ========================================================= */
+
+    let manualOverride = {
+        beforeViews: false,
+        afterViews: false,
+        beforeLikes: false,
+        afterLikes: false
+    };
+
+    let isProgrammaticMetricChange = false;
+
+    function markManualOverride(type) {
+        if (!isProgrammaticMetricChange) {
+            manualOverride[type] = true;
+            saveData();
+        }
+    }
+
+    bViews.addEventListener('input', () => markManualOverride('beforeViews'));
+    aViews.addEventListener('input', () => markManualOverride('afterViews'));
+    bLikes.addEventListener('input', () => markManualOverride('beforeLikes'));
+    aLikes.addEventListener('input', () => markManualOverride('afterLikes'));
+
+    /* =========================================================
+       NUMBER FORMATTING
+       ========================================================= */
+
+    function formatNumberToK(val) {
+
+        if (!val) return '0';
+
+        let cleanStr = val
+            .toString()
+            .toUpperCase()
+            .replace(/,/g, '')
+            .trim();
+
+        if (cleanStr.includes('K') || cleanStr.includes('M')) {
+            return cleanStr;
+        }
+
+        let num = parseFloat(cleanStr);
+
+        if (isNaN(num)) return val;
+
+        if (num >= 1000000) {
+
+            let formatted = (num / 1000000).toFixed(1);
+
+            return (
+                formatted.endsWith('.0')
+                    ? parseInt(formatted)
+                    : formatted
+            ) + 'M';
+        }
+
+        if (num >= 1000) {
+
+            let formatted = (num / 1000).toFixed(1);
+
+            return (
+                formatted.endsWith('.0')
+                    ? parseInt(formatted)
+                    : formatted
+            ) + 'K';
+        }
+
+        return num.toLocaleString();
+    }
+
+    function parseNum(str) {
+
+        if (!str) return 0;
+
+        let s = str
+            .toString()
+            .toUpperCase()
+            .replace(/,/g, '')
+            .trim();
+
+        let m = 1;
+
+        if (s.includes('M')) {
+            m = 1000000;
+            s = s.replace('M', '');
+        } else if (s.includes('K')) {
+            m = 1000;
+            s = s.replace('K', '');
+        }
+
+        let n = parseFloat(s);
+
+        return isNaN(n) ? 0 : n * m;
+    }
+
+    /* =========================================================
+       UPDATE UI
+       ========================================================= */
+
+    function updateUI() {
+
+        valBViews.textContent = formatNumberToK(bViews.value);
+        valAViews.textContent = formatNumberToK(aViews.value);
+
+        valBLikes.textContent = formatNumberToK(bLikes.value);
+        valALikes.textContent = formatNumberToK(aLikes.value);
+
+        valBrand.textContent =
+            `${brand.value} | ${label.value}`.toUpperCase();
+
+        watermarkText.textContent =
+            brand.value.toUpperCase();
+
+        watermarkText.className =
+            `watermark-overlay ${wmPosSelect.value}`;
+
+        if (exportSizeSelect.value === 'square') {
+
+            exportNode.style.maxWidth = '650px';
+            exportNode.style.margin = '0 auto';
+
+        } else {
+
+            exportNode.style.maxWidth = 'none';
+            exportNode.style.margin = '';
+        }
+
+        const tags = highlightsInput.value
+            .split(',')
+            .map(t => t.trim())
+            .filter(t => t);
+
+        valHighlights.innerHTML =
+            tags.map(t => `<span class="highlight-tag">${escapeHTML(t)}</span>`).join('');
+
+        const bv = parseNum(bViews.value);
+        const av = parseNum(aViews.value);
+
+        const bl = parseNum(bLikes.value);
+        const al = parseNum(aLikes.value);
+
+        valBEng.textContent =
+            (bv > 0)
+                ? `Engagement Rate: ${((bl / bv) * 100).toFixed(1)}%`
+                : 'Engagement Rate: 0%';
+
+        valAEng.textContent =
+            (av > 0)
+                ? `Engagement Rate: ${((al / av) * 100).toFixed(1)}%`
+                : 'Engagement Rate: 0%';
+
+        /* VIEWS + LIKES GROWTH */
+
+        if (bv > 0 && av > bv) {
+
+            const viewGrowth =
+                ((av - bv) / bv) * 100;
+
+            let likesGrowthText = '';
+
+            if (bl > 0 && al >= bl) {
+
+                const likesGrowth =
+                    ((al - bl) / bl) * 100;
+
+                likesGrowthText =
+                    ` | +${likesGrowth.toFixed(1)}% Likes`;
+
+            }
+
+            valGrowth.textContent =
+                `+${viewGrowth.toFixed(1)}% Views Growth${likesGrowthText}`;
+
+        } else if (bv > 0 && av === bv) {
+
+            valGrowth.textContent =
+                `0% Views Growth`;
+
+        } else {
+
+            valGrowth.textContent =
+                'Campaign Growth';
+        }
+
+        updateDownloadButtonText();
+    }
+
+    /* =========================================================
+       SAFE HTML
+       ========================================================= */
+
+    function escapeHTML(str) {
+
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    /* =========================================================
+       AUTO SAVE
+       ========================================================= */
+
+    const STORAGE_KEY = 'fardinProofGeneratorData_v3';
+
+    function saveData() {
+
+        try {
+
+            const data = {
+                bViews: bViews.value,
+                aViews: aViews.value,
+                bLikes: bLikes.value,
+                aLikes: aLikes.value,
+                label: label.value,
+                brand: brand.value,
+                highlights: highlightsInput.value,
+                wmPos: wmPosSelect.value,
+                exportSize: exportSizeSelect.value,
+                exportQuality: exportQualitySelect.value,
+                manualOverride: manualOverride
+            };
+
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify(data)
+            );
+
+        } catch (e) {
+            console.warn('Auto-save unavailable.');
+        }
+    }
+
+    function loadData() {
+
+        try {
+
+            const saved =
+                localStorage.getItem(STORAGE_KEY);
+
+            if (!saved) return;
+
+            const data = JSON.parse(saved);
+
+            bViews.value = data.bViews ?? DEFAULTS.bViews;
+            aViews.value = data.aViews ?? DEFAULTS.aViews;
+
+            bLikes.value = data.bLikes ?? DEFAULTS.bLikes;
+            aLikes.value = data.aLikes ?? DEFAULTS.aLikes;
+
+            label.value = data.label ?? DEFAULTS.label;
+            brand.value = data.brand ?? DEFAULTS.brand;
+
+            highlightsInput.value =
+                data.highlights ?? DEFAULTS.highlights;
+
+            wmPosSelect.value =
+                data.wmPos ?? DEFAULTS.wmPos;
+
+            exportSizeSelect.value =
+                data.exportSize ?? DEFAULTS.exportSize;
+
+            exportQualitySelect.value =
+                data.exportQuality ?? DEFAULTS.exportQuality;
+
+            if (data.manualOverride) {
+                manualOverride = {
+                    beforeViews: !!data.manualOverride.beforeViews,
+                    afterViews: !!data.manualOverride.afterViews,
+                    beforeLikes: !!data.manualOverride.beforeLikes,
+                    afterLikes: !!data.manualOverride.afterLikes
+                };
+            }
+
+        } catch (e) {
+
+            console.warn('Could not load saved data.');
+
+        }
+    }
+
+    /* =========================================================
+       INPUT AUTO SAVE
+       ========================================================= */
+
+    [
+        bViews,
+        aViews,
+        bLikes,
+        aLikes,
+        label,
+        brand,
+        highlightsInput,
+        wmPosSelect,
+        exportSizeSelect,
+        exportQualitySelect
+    ].forEach(el => {
+
+        el.addEventListener('input', () => {
+            updateUI();
+            saveData();
+        });
+
+        el.addEventListener('change', () => {
+            updateUI();
+            saveData();
+        });
+
+    });
+
+    /* =========================================================
+       CROP VARIABLES
+       ========================================================= */
+
+    let cropper;
+    let currentTarget = null;
+
+    const cropModal =
+        document.getElementById('cropModal');
+
+    const cropImage =
+        document.getElementById('cropTarget');
+
+    /* =========================================================
+       OPEN CROPPER
+       ========================================================= */
+
+    function openCropper(file, target) {
+
+        currentTarget = target;
+
+        const reader = new FileReader();
+
+        reader.onload = e => {
+
+            cropImage.src = e.target.result;
+
+            cropModal.style.display = 'flex';
+
+            if (cropper) {
+                cropper.destroy();
+            }
+
+            cropper = new Cropper(
+                cropImage,
+                {
+                    viewMode: 1,
+                    dragMode: 'crop',
+                    autoCropArea: 0.9,
+                    responsive: true,
+                    background: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+
+                    ready() {
+                        triggerSmartAutoCrop();
+                    }
+                }
+            );
+        };
+
+        reader.readAsDataURL(file);
+    }
+
+    /* =========================================================
+       FILE INPUTS
+       ========================================================= */
+
+    document.getElementById('beforeInput')
+        .addEventListener('change', e => {
+
+            if (e.target.files[0]) {
+                openCropper(
+                    e.target.files[0],
+                    'before'
+                );
+            }
+        });
+
+    document.getElementById('afterInput')
+        .addEventListener('change', e => {
+
+            if (e.target.files[0]) {
+                openCropper(
+                    e.target.files[0],
+                    'after'
+                );
+            }
+        });
+
+    /* =========================================================
+       CROP RATIO
+       ========================================================= */
+
+    document
+        .querySelectorAll('.crop-tools-group [data-ratio]')
+        .forEach(btn => {
+
+            btn.addEventListener('click', e => {
+
+                document
+                    .querySelectorAll('.crop-tools-group [data-ratio]')
+                    .forEach(b => {
+                        b.classList.remove('active');
+                    });
+
+                e.target.classList.add('active');
+
+                const ratio =
+                    parseFloat(
+                        e.target.getAttribute('data-ratio')
+                    );
+
+                if (cropper) {
+                    cropper.setAspectRatio(ratio);
+                }
+            });
+
+        });
+
+    /* =========================================================
+       ROTATE / RESET
+       ========================================================= */
+
+    document
+        .getElementById('rotateLeftBtn')
+        .addEventListener('click', () => {
+
+            if (cropper) {
+                cropper.rotate(-90);
+            }
+
+        });
+
+    document
+        .getElementById('resetCropBtn')
+        .addEventListener('click', () => {
+
+            if (cropper) {
+                cropper.reset();
+            }
+
+        });
+
+    /* =========================================================
+       SMART AUTO CROP
+       ========================================================= */
+
+    function triggerSmartAutoCrop() {
+
+        if (!cropper) return;
+
+        const containerData =
+            cropper.getContainerData();
+
+        cropper.setCropBoxData({
+            left: containerData.width * 0.05,
+            top: containerData.height * 0.12,
+            width: containerData.width * 0.90,
+            height: containerData.height * 0.65
+        });
+    }
+
+    document
+        .getElementById('autoCropBtn')
+        .addEventListener('click', () => {
+
+            triggerSmartAutoCrop();
+
+        });
+
+    /* =========================================================
+       CANCEL CROP
+       ========================================================= */
+
+    document
+        .getElementById('cancelCrop')
+        .addEventListener('click', () => {
+
+            cropModal.style.display = 'none';
+
+            document.getElementById('beforeInput').value = '';
+            document.getElementById('afterInput').value = '';
+
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+
+        });
+
+    /* =========================================================
+       APPLY CROP
+       ========================================================= */
+
+    document
+        .getElementById('applyCrop')
+        .addEventListener('click', () => {
+
+            if (!cropper) return;
+
+            const canvas =
+                cropper.getCroppedCanvas({
+                    maxWidth: 4096,
+                    maxHeight: 4096,
+                    fillColor: '#000000',
+                    imageSmoothingEnabled: true,
+                    imageSmoothingQuality: 'high'
+                });
+
+            if (!canvas) return;
+
+            const dataUrl =
+                canvas.toDataURL('image/png', 1.0);
+
+            cropModal.style.display = 'none';
+
+            if (currentTarget === 'before') {
+
+                document.getElementById('beforeImg').src =
+                    dataUrl;
+
+                document.getElementById('beforeImg')
+                    .style.display = 'block';
+
+                document.getElementById('exportBeforeImg').src =
+                    dataUrl;
+
+                document.getElementById('exportBeforeImg')
+                    .style.display = 'block';
+
+                document.getElementById('bPlaceholder')
+                    .style.display = 'none';
+
+                document.getElementById('beforeRemove')
+                    .style.display = 'flex';
+
+                if (autoCountEnabled) {
+                    scanImageForMetrics(
+                        dataUrl,
+                        'before'
+                    );
+                }
+
+            } else {
+
+                document.getElementById('afterImg').src =
+                    dataUrl;
+
+                document.getElementById('afterImg')
+                    .style.display = 'block';
+
+                document.getElementById('exportAfterImg').src =
+                    dataUrl;
+
+                document.getElementById('exportAfterImg')
+                    .style.display = 'block';
+
+                document.getElementById('aPlaceholder')
+                    .style.display = 'none';
+
+                document.getElementById('afterRemove')
+                    .style.display = 'flex';
+
+                if (autoCountEnabled) {
+                    scanImageForMetrics(
+                        dataUrl,
+                        'after'
+                    );
+                }
+            }
+
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+
+        });
+
+    /* =========================================================
+       REMOVE BEFORE
+       ========================================================= */
+
+    document
+        .getElementById('beforeRemove')
+        .addEventListener('click', e => {
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            document.getElementById('beforeInput').value = '';
+
+            document.getElementById('beforeImg')
+                .style.display = 'none';
+
+            document.getElementById('beforeImg').src = '';
+
+            document.getElementById('exportBeforeImg')
+                .style.display = 'none';
+
+            document.getElementById('exportBeforeImg').src = '';
+
+            document.getElementById('bPlaceholder')
+                .style.display = 'block';
+
+            e.currentTarget.style.display = 'none';
+
+        });
+
+    /* =========================================================
+       REMOVE AFTER
+       ========================================================= */
+
+    document
+        .getElementById('afterRemove')
+        .addEventListener('click', e => {
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            document.getElementById('afterInput').value = '';
+
+            document.getElementById('afterImg')
+                .style.display = 'none';
+
+            document.getElementById('afterImg').src = '';
+
+            document.getElementById('exportAfterImg')
+                .style.display = 'none';
+
+            document.getElementById('exportAfterImg').src = '';
+
+            document.getElementById('aPlaceholder')
+                .style.display = 'block';
+
+            e.currentTarget.style.display = 'none';
+
+        });
+
+    /* =========================================================
+       CLEAR IMAGES
+       ========================================================= */
+
+    clearImagesBtn.addEventListener('click', () => {
+
+        document.getElementById('beforeRemove').click();
+        document.getElementById('afterRemove').click();
+
+    });
+
+    /* =========================================================
+       AUTO OCR
+       ========================================================= */
+
+    autoCountBtn.addEventListener('click', async () => {
+
+        autoCountEnabled =
+            !autoCountEnabled;
+
+        if (autoCountEnabled) {
+
+            autoCountBtn.innerHTML =
+                '🤖 Auto Views Count: ON';
+
+            autoCountBtn.classList.remove(
+                'btn-outline'
+            );
+
+            autoCountBtn.classList.add(
+                'btn-primary'
+            );
+
+            const beforeExportImg =
+                document.getElementById('exportBeforeImg');
+
+            const afterExportImg =
+                document.getElementById('exportAfterImg');
+
+            if (
+                beforeExportImg.src &&
+                beforeExportImg.style.display !== 'none'
+            ) {
+
+                await scanImageForMetrics(
+                    beforeExportImg.src,
+                    'before'
+                );
+            }
+
+            if (
+                afterExportImg.src &&
+                afterExportImg.style.display !== 'none'
+            ) {
+
+                await scanImageForMetrics(
+                    afterExportImg.src,
+                    'after'
+                );
+            }
+
+        } else {
+
+            autoCountBtn.innerHTML =
+                '🤖 Auto Views Count: OFF';
+
+            autoCountBtn.classList.remove(
+                'btn-primary'
+            );
+
+            autoCountBtn.classList.add(
+                'btn-outline'
+            );
+        }
+
+    });
+
+    /* =========================================================
+       OCR
+       ========================================================= */
+
+    async function scanImageForMetrics(imgData, target) {
+
+        const statusEl =
+            document.getElementById(
+                `${target}ScanStatus`
+            );
+
+        statusEl.style.display = 'block';
+        statusEl.textContent =
+            'AI Scanning metrics...';
+
+        try {
+
+            const result =
+                await Tesseract.recognize(
+                    imgData,
+                    'eng'
+                );
+
+            const lines =
+                result.data.text
+                    .split('\n')
+                    .map(l => l.trim())
+                    .filter(l => l);
+
+            let foundViews = null;
+            let foundLikes = null;
+
+            for (let i = 0; i < lines.length; i++) {
+
+                const line =
+                    lines[i].toLowerCase();
+
+                if (
+                    line.includes('view') &&
+                    !foundViews
+                ) {
+
+                    let numMatch =
+                        lines[i].match(
+                            /([\d,\.]+(?:\s*[KM])?)\b/i
+                        );
+
+                    if (!numMatch && i > 0) {
+
+                        numMatch =
+                            lines[i - 1].match(
+                                /([\d,\.]+(?:\s*[KM])?)\b/i
+                            );
+                    }
+
+                    if (numMatch) {
+                        foundViews =
+                            numMatch[1];
+                    }
+                }
+
+                if (
+                    line.includes('like') &&
+                    !foundLikes
+                ) {
+
+                    let numMatch =
+                        lines[i].match(
+                            /([\d,\.]+(?:\s*[KM])?)\b/i
+                        );
+
+                    if (!numMatch && i > 0) {
+
+                        numMatch =
+                            lines[i - 1].match(
+                                /([\d,\.]+(?:\s*[KM])?)\b/i
+                            );
+                    }
+
+                    if (
+                        numMatch &&
+                        numMatch[1] !== foundViews
+                    ) {
+
+                        foundLikes =
+                            numMatch[1];
+                    }
+                }
+            }
+
+            /*
+             * MANUAL OVERRIDE PROTECTION
+             *
+             * OCR will NOT replace a metric
+             * if the user has manually edited it.
+             */
+
+            isProgrammaticMetricChange = true;
+
+            if (target === 'before') {
+
+                if (
+                    foundViews &&
+                    !manualOverride.beforeViews
+                ) {
+                    bViews.value = foundViews;
+                }
+
+                if (
+                    foundLikes &&
+                    !manualOverride.beforeLikes
+                ) {
+                    bLikes.value = foundLikes;
+                }
+
+            } else {
+
+                if (
+                    foundViews &&
+                    !manualOverride.afterViews
+                ) {
+                    aViews.value = foundViews;
+                }
+
+                if (
+                    foundLikes &&
+                    !manualOverride.afterLikes
+                ) {
+                    aLikes.value = foundLikes;
+                }
+            }
+
+            isProgrammaticMetricChange = false;
+
+            updateUI();
+            saveData();
+
+            if (foundViews || foundLikes) {
+
+                statusEl.textContent =
+                    'Auto-filled successfully!';
+
+                statusEl.style.background =
+                    'rgba(34, 197, 94, 0.9)';
+
+            } else {
+
+                statusEl.textContent =
+                    'No reliable metrics found.';
+
+                statusEl.style.background =
+                    'rgba(239, 68, 68, 0.9)';
+            }
+
+        } catch (e) {
+
+            isProgrammaticMetricChange = false;
+
+            statusEl.textContent =
+                'Scan failed.';
+
+            statusEl.style.background =
+                'rgba(239, 68, 68, 0.9)';
+        }
+
+        setTimeout(() => {
+
+            statusEl.style.display =
+                'none';
+
+        }, 3000);
+    }
+
+    /* =========================================================
+       SWAP BEFORE / AFTER
+       ========================================================= */
+
+    swapBtn.addEventListener('click', () => {
+
+        const tempViews = bViews.value;
+        bViews.value = aViews.value;
+        aViews.value = tempViews;
+
+        const tempLikes = bLikes.value;
+        bLikes.value = aLikes.value;
+        aLikes.value = tempLikes;
+
+        const beforeImg =
+            document.getElementById('beforeImg');
+
+        const afterImg =
+            document.getElementById('afterImg');
+
+        const exportBeforeImg =
+            document.getElementById('exportBeforeImg');
+
+        const exportAfterImg =
+            document.getElementById('exportAfterImg');
+
+        const beforeVisible =
+            beforeImg.style.display !== 'none';
+
+        const afterVisible =
+            afterImg.style.display !== 'none';
+
+        const tempBeforeSrc =
+            beforeImg.src;
+
+        beforeImg.src =
+            afterImg.src;
+
+        afterImg.src =
+            tempBeforeSrc;
+
+        const tempExportSrc =
+            exportBeforeImg.src;
+
+        exportBeforeImg.src =
+            exportAfterImg.src;
+
+        exportAfterImg.src =
+            tempExportSrc;
+
+        beforeImg.style.display =
+            afterVisible ? 'block' : 'none';
+
+        afterImg.style.display =
+            beforeVisible ? 'block' : 'none';
+
+        exportBeforeImg.style.display =
+            afterVisible ? 'block' : 'none';
+
+        exportAfterImg.style.display =
+            beforeVisible ? 'block' : 'none';
+
+        document.getElementById('bPlaceholder')
+            .style.display =
+            afterVisible ? 'none' : 'block';
+
+        document.getElementById('aPlaceholder')
+            .style.display =
+            beforeVisible ? 'none' : 'block';
+
+        document.getElementById('beforeRemove')
+            .style.display =
+            afterVisible ? 'flex' : 'none';
+
+        document.getElementById('afterRemove')
+            .style.display =
+            beforeVisible ? 'flex' : 'none';
+
+        /*
+         * Swap manual override states too.
+         */
+
+        const tempBV =
+            manualOverride.beforeViews;
+
+        manualOverride.beforeViews =
+            manualOverride.afterViews;
+
+        manualOverride.afterViews =
+            tempBV;
+
+        const tempBL =
+            manualOverride.beforeLikes;
+
+        manualOverride.beforeLikes =
+            manualOverride.afterLikes;
+
+        manualOverride.afterLikes =
+            tempBL;
+
+        updateUI();
+        saveData();
+
+    });
+
+    /* =========================================================
+       COPY METRICS
+       ========================================================= */
+
+    copyMetricsBtn.addEventListener('click', async () => {
+
+        const text =
+`Before:
+Views: ${bViews.value}
+Likes: ${bLikes.value}
+
+After:
+Views: ${aViews.value}
+Likes: ${aLikes.value}
+
+Views Growth: ${calculateGrowth(bViews.value, aViews.value)}
+Likes Growth: ${calculateGrowth(bLikes.value, aLikes.value)}`;
+
+        try {
+
+            await navigator.clipboard.writeText(text);
+
+            const original =
+                copyMetricsBtn.innerHTML;
+
+            copyMetricsBtn.innerHTML =
+                '✓ Copied!';
+
+            setTimeout(() => {
+                copyMetricsBtn.innerHTML =
+                    original;
+            }, 1500);
+
+        } catch (e) {
+
+            alert(
+                'Could not copy metrics. Please copy manually.'
+            );
+        }
+
+    });
+
+    /* =========================================================
+       GROWTH CALCULATOR
+       ========================================================= */
+
+    function calculateGrowth(before, after) {
+
+        const b = parseNum(before);
+        const a = parseNum(after);
+
+        if (!b || a <= b) {
+
+            if (b && a === b) {
+                return '0%';
+            }
+
+            return 'N/A';
+        }
+
+        return (
+            '+' +
+            (((a - b) / b) * 100).toFixed(1) +
+            '%'
+        );
+    }
+
+    /* =========================================================
+       EXPORT QUALITY
+       ========================================================= */
+
+    function getExportScale() {
+
+        const value =
+            parseInt(exportQualitySelect.value);
+
+        if ([2, 3, 4].includes(value)) {
+            return value;
+        }
+
+        return 4;
+    }
+
+    function getQualityName() {
+
+        const scale =
+            getExportScale();
+
+        if (scale === 2) return 'HD';
+        if (scale === 3) return '2K';
+
+        return '4K';
+    }
+
+    function updateDownloadButtonText() {
+
+        downloadBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export Case Study (${getQualityName()})
+        `;
+    }
+
+    /* =========================================================
+       SMART FILENAME
+       ========================================================= */
+
+    function makeSafeFilename(text) {
+
+        return text
+            .toString()
+            .trim()
+            .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
+            .replace(/\s+/g, '_')
+            .replace(/_+/g, '_')
+            .substring(0, 80);
+    }
+
+    function getExportFilename() {
+
+        const brandName =
+            makeSafeFilename(
+                brand.value || 'FardinAdWorks'
+            );
+
+        const campaignName =
+            makeSafeFilename(
+                label.value || 'CaseStudy'
+            );
+
+        return `${brandName}_${campaignName}_${getQualityName()}_${Date.now()}.png`;
+    }
+
+    /* =========================================================
+       DOWNLOAD
+       ========================================================= */
+
+    downloadBtn.addEventListener('click', async function() {
+
+        const node =
+            document.getElementById('exportNode');
+
+        const btn = this;
+
+        const originalText =
+            btn.innerHTML;
+
+        const scale =
+            getExportScale();
+
+        btn.innerHTML =
+            `Rendering ${getQualityName()}...`;
+
+        btn.style.pointerEvents =
+            'none';
+
+        btn.style.opacity =
+            '0.7';
+
+        try {
+
+            /*
+             * Small delay allows the UI to update
+             * before heavy canvas rendering.
+             */
+
+            await new Promise(resolve =>
+                setTimeout(resolve, 50)
+            );
+
+            const canvas =
+                await html2canvas(
+                    node,
+                    {
+                        scale: scale,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: '#000000',
+                        logging: false,
+                        windowWidth: node.scrollWidth,
+                        imageTimeout: 15000,
+                        removeContainer: true
+                    }
+                );
+
+            const link =
+                document.createElement('a');
+
+            link.download =
+                getExportFilename();
+
+            link.href =
+                canvas.toDataURL(
+                    'image/png',
+                    1.0
+                );
+
+            document.body.appendChild(link);
+
+            link.click();
+
+            link.remove();
+
+        } catch (error) {
+
+            console.error(
+                'Export failed:',
+                error
+            );
+
+            alert(
+                'Export failed. Please try again or use a lower export quality.'
+            );
+
+        } finally {
+
+            btn.innerHTML =
+                originalText;
+
+            btn.style.pointerEvents =
+                'auto';
+
+            btn.style.opacity =
+                '1';
+
+            updateDownloadButtonText();
+        }
+
+    });
+
+    /* =========================================================
+       RESET
+       ========================================================= */
+
+    resetBtn.addEventListener('click', () => {
+
+        document.getElementById('beforeRemove').click();
+        document.getElementById('afterRemove').click();
+
+        bViews.value =
+            DEFAULTS.bViews;
+
+        aViews.value =
+            DEFAULTS.aViews;
+
+        bLikes.value =
+            DEFAULTS.bLikes;
+
+        aLikes.value =
+            DEFAULTS.aLikes;
+
+        label.value =
+            DEFAULTS.label;
+
+        brand.value =
+            DEFAULTS.brand;
+
+        highlightsInput.value =
+            DEFAULTS.highlights;
+
+        wmPosSelect.value =
+            DEFAULTS.wmPos;
+
+        exportSizeSelect.value =
+            DEFAULTS.exportSize;
+
+        exportQualitySelect.value =
+            DEFAULTS.exportQuality;
+
+        manualOverride = {
+            beforeViews: false,
+            afterViews: false,
+            beforeLikes: false,
+            afterLikes: false
+        };
+
+        /*
+         * Auto Count is intentionally NOT reset.
+         * This means reset only resets project data.
+         */
+
+        updateUI();
+        saveData();
+
+    });
+
+    /* =========================================================
+       INITIAL LOAD
+       ========================================================= */
+
+    loadData();
+    updateUI();
+
+});
+
+</script>
+
+</body>
+</html>
