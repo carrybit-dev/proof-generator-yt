@@ -277,8 +277,9 @@
             padding: 40px;
             border: 1px solid var(--border);
             position: relative;
-            overflow: hidden;
+            overflow: visible;
             box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+            min-width: 700px;
         }
 
         .watermark-overlay {
@@ -436,6 +437,7 @@
             flex-wrap: wrap;
             gap: 8px;
             margin-top: 10px;
+            width: 100%;
         }
 
         .highlight-tag {
@@ -447,6 +449,8 @@
             font-size: 11px;
             font-weight: 600;
             letter-spacing: 0.5px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .export-footer {
@@ -887,7 +891,7 @@
 
             <div class="crop-tools-group">
 
-                <button class="tool-btn active" data-ratio="NaN">
+                <button class="tool-btn" data-ratio="NaN">
                     Free Size
                 </button>
 
@@ -895,7 +899,11 @@
                     16:9 Landscape
                 </button>
 
-                <button class="tool-btn" data-ratio="1">
+                <button class="tool-btn" data-ratio="9:16">
+                    9:16 Portrait
+                </button>
+
+                <button class="tool-btn active" data-ratio="1">
                     1:1 Square
                 </button>
 
@@ -946,7 +954,7 @@
 </div>
 
 <!-- LIBRARIES -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
@@ -1146,16 +1154,15 @@ document.addEventListener('DOMContentLoaded', () => {
         watermarkText.className =
             `watermark-overlay ${wmPosSelect.value}`;
 
-        if (exportSizeSelect.value === 'square') {
+        /*
+         * Square export no longer squishes the live layout
+         * (that caused cramped text wrap and a tall, non-square
+         * result). Squaring now happens on the captured canvas
+         * at download time instead — see downloadBtn handler.
+         */
 
-            exportNode.style.maxWidth = '650px';
-            exportNode.style.margin = '0 auto';
-
-        } else {
-
-            exportNode.style.maxWidth = 'none';
-            exportNode.style.margin = '';
-        }
+        exportNode.style.maxWidth = 'none';
+        exportNode.style.margin = '';
 
         const tags = highlightsInput.value
             .split(',')
@@ -1356,6 +1363,31 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('cropTarget');
 
     /* =========================================================
+       RATIO PARSING (FIXED)
+       ---------------------------------------------------------
+       parseFloat("16:9") returns 16, not 1.778 — it reads only
+       the leading number and ignores everything after ":".
+       That silently turned every "16:9" crop into a 16:1 sliver.
+       This helper parses "W:H" strings correctly.
+       ========================================================= */
+
+    function parseRatioAttr(str) {
+
+        if (str === 'NaN') return NaN;
+
+        if (str.includes(':')) {
+
+            const parts = str.split(':').map(Number);
+
+            if (parts.length === 2 && parts[1] !== 0) {
+                return parts[0] / parts[1];
+            }
+        }
+
+        return parseFloat(str);
+    }
+
+    /* =========================================================
        OPEN CROPPER
        ========================================================= */
 
@@ -1375,11 +1407,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 cropper.destroy();
             }
 
+            const activeBtn =
+                document.querySelector('.crop-tools-group [data-ratio].active');
+
+            const initialRatio =
+                activeBtn
+                    ? parseRatioAttr(activeBtn.getAttribute('data-ratio'))
+                    : 1;
+
             cropper = new Cropper(
                 cropImage,
                 {
                     viewMode: 1,
                     dragMode: 'crop',
+                    aspectRatio: initialRatio,
                     autoCropArea: 0.9,
                     responsive: true,
                     background: false,
@@ -1444,7 +1485,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.target.classList.add('active');
 
                 const ratio =
-                    parseFloat(
+                    parseRatioAttr(
                         e.target.getAttribute('data-ratio')
                     );
 
@@ -2200,48 +2241,90 @@ Likes Growth: ${calculateGrowth(bLikes.value, aLikes.value)}`;
              */
 
             await new Promise(resolve =>
-                setTimeout(resolve, 50)
+                setTimeout(resolve, 150)
             );
 
-            const canvas =
-                await html2canvas(
-                    node,
-                    {
-                        scale: scale,
-                        useCORS: true,
-                        allowTaint: true,
-                        backgroundColor: '#000000',
-                        logging: false,
-                        windowWidth: node.scrollWidth,
-                        imageTimeout: 15000,
-                        removeContainer: true
-                    }
-                );
+            const nodeWidth  = node.scrollWidth  || node.offsetWidth;
+            const nodeHeight = node.scrollHeight || node.offsetHeight;
 
-            const link =
-                document.createElement('a');
+            const dataUrl = await domtoimage.toPng(node, {
+                width:  nodeWidth  * scale,
+                height: nodeHeight * scale,
+                style: {
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'top left',
+                    width:  nodeWidth  + 'px',
+                    height: nodeHeight + 'px',
+                    overflow: 'visible',
+                },
+                bgcolor: '#000000',
+                quality: 1
+            });
 
-            link.download =
-                getExportFilename();
+            /*
+             * Load the data URL into an Image, draw onto
+             * a final canvas for optional aspect-ratio boxing.
+             */
 
-            link.href =
-                canvas.toDataURL(
-                    'image/png',
-                    1.0
-                );
+            const img = new Image();
 
+            await new Promise((res, rej) => {
+                img.onload = res;
+                img.onerror = rej;
+                img.src = dataUrl;
+            });
+
+            function getTargetAspect() {
+                if (exportSizeSelect.value === 'square')   return 1;
+                if (exportSizeSelect.value === 'standard') return 16 / 9;
+                return null;
+            }
+
+            const targetAspect = getTargetAspect();
+
+            let finalDataUrl = dataUrl;
+
+            if (targetAspect) {
+
+                const contentAspect = img.width / img.height;
+
+                let finalWidth;
+                let finalHeight;
+
+                if (contentAspect < targetAspect) {
+                    finalHeight = img.height;
+                    finalWidth  = Math.round(finalHeight * targetAspect);
+                } else {
+                    finalWidth  = img.width;
+                    finalHeight = Math.round(finalWidth / targetAspect);
+                }
+
+                const boxCanvas = document.createElement('canvas');
+                boxCanvas.width  = finalWidth;
+                boxCanvas.height = finalHeight;
+
+                const bctx = boxCanvas.getContext('2d');
+                bctx.fillStyle = '#000000';
+                bctx.fillRect(0, 0, finalWidth, finalHeight);
+
+                const offsetX = (finalWidth  - img.width)  / 2;
+                const offsetY = (finalHeight - img.height) / 2;
+
+                bctx.drawImage(img, offsetX, offsetY);
+
+                finalDataUrl = boxCanvas.toDataURL('image/png', 1.0);
+            }
+
+            const link = document.createElement('a');
+            link.download = getExportFilename();
+            link.href = finalDataUrl;
             document.body.appendChild(link);
-
             link.click();
-
             link.remove();
 
         } catch (error) {
 
-            console.error(
-                'Export failed:',
-                error
-            );
+            console.error('Export failed:', error);
 
             alert(
                 'Export failed. Please try again or use a lower export quality.'
@@ -2249,14 +2332,9 @@ Likes Growth: ${calculateGrowth(bLikes.value, aLikes.value)}`;
 
         } finally {
 
-            btn.innerHTML =
-                originalText;
-
-            btn.style.pointerEvents =
-                'auto';
-
-            btn.style.opacity =
-                '1';
+            btn.innerHTML = originalText;
+            btn.style.pointerEvents = 'auto';
+            btn.style.opacity = '1';
 
             updateDownloadButtonText();
         }
